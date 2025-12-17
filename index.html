@@ -1,0 +1,617 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Digital Exposure Calculator (Weekly): Ads, Tracking, Attention Tax</title>
+  <meta name="description" content="Estimate your weekly exposure to ads, tracking, and sponsored persuasion based on your last 7 days online. Save a week and compare your trend." />
+  <meta name="robots" content="index,follow" />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Digital Exposure Calculator (Weekly)" />
+  <meta property="og:description" content="Get a shockingly clear estimate of your weekly ads, tracking, and attention tax — then save and compare week-to-week." />
+  <meta property="og:type" content="website" />
+
+  <style>
+    :root{
+      --bg:#0b0f17;
+      --card:#111827;
+      --muted:#9ca3af;
+      --text:#e5e7eb;
+      --accent:#60a5fa;
+      --accent2:#34d399;
+      --warn:#fbbf24;
+      --danger:#fb7185;
+      --border:rgba(255,255,255,.08);
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius:16px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      background:
+        radial-gradient(1000px 600px at 20% 0%, rgba(96,165,250,.25), transparent 60%),
+        radial-gradient(900px 500px at 100% 20%, rgba(52,211,153,.18), transparent 55%),
+        var(--bg);
+      color:var(--text);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      line-height:1.35;
+    }
+    a{color:var(--accent); text-decoration:none}
+    a:hover{text-decoration:underline}
+    .wrap{max-width:1050px; margin:0 auto; padding:28px 16px 60px}
+    header{display:flex; flex-direction:column; gap:10px; margin-bottom:18px}
+    .badge{
+      display:inline-flex; gap:8px; align-items:center;
+      padding:6px 10px; border:1px solid var(--border);
+      border-radius:999px; width:max-content; color:var(--muted);
+      background:rgba(255,255,255,.03);
+    }
+    h1{margin:0; font-size: clamp(26px, 3.4vw, 44px); letter-spacing:-0.02em}
+    .sub{color:var(--muted); max-width:80ch; margin:0}
+    .grid{display:grid; grid-template-columns: 1.1fr .9fr; gap:16px; margin-top:18px}
+    @media (max-width: 920px){ .grid{grid-template-columns:1fr} }
+    .card{
+      background:rgba(17,24,39,.85);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:16px;
+    }
+    .card h2{margin:0 0 10px; font-size:18px}
+    .row{display:grid; grid-template-columns: 1fr 1fr; gap:12px}
+    @media (max-width: 520px){ .row{grid-template-columns:1fr} }
+    label{display:block; font-size:13px; color:var(--muted); margin-bottom:6px}
+    input[type="number"], input[type="text"], select{
+      width:100%; padding:10px 12px;
+      border-radius:12px; border:1px solid var(--border);
+      background:rgba(0,0,0,.25); color:var(--text);
+      outline:none;
+    }
+    input[type="number"]:focus, input[type="text"]:focus, select:focus{
+      border-color: rgba(96,165,250,.55);
+      box-shadow: 0 0 0 4px rgba(96,165,250,.15);
+    }
+    .toggles{display:flex; flex-wrap:wrap; gap:10px; margin-top:10px}
+    .toggle{
+      display:flex; align-items:center; gap:8px;
+      padding:10px 12px; border:1px solid var(--border);
+      border-radius:12px; background:rgba(255,255,255,.03);
+      color:var(--text); cursor:pointer; user-select:none;
+    }
+    .toggle input{transform: scale(1.1)}
+    .btns{display:flex; gap:10px; flex-wrap:wrap; margin-top:12px}
+    button{
+      border:0; border-radius:14px; padding:12px 14px;
+      cursor:pointer; font-weight:700; letter-spacing:.01em;
+    }
+    .primary{
+      background:linear-gradient(135deg, rgba(96,165,250,1), rgba(52,211,153,1));
+      color:#071018;
+    }
+    .ghost{background:transparent; color:var(--text); border:1px solid var(--border)}
+    .note{font-size:13px; color:var(--muted); margin-top:10px}
+    .results{display:grid; grid-template-columns: 1fr 1fr; gap:12px}
+    @media (max-width: 620px){ .results{grid-template-columns:1fr} }
+    .tile{
+      padding:14px; border:1px solid var(--border);
+      border-radius:14px; background:rgba(0,0,0,.22);
+    }
+    .k{font-size:12px; color:var(--muted); margin:0 0 6px}
+    .v{font-size:22px; margin:0 0 6px; font-weight:800; letter-spacing:-0.01em}
+    .c{font-size:13px; color:var(--muted); margin:0}
+    .scorebar{height:10px; border-radius:999px; background:rgba(255,255,255,.08); overflow:hidden; margin-top:10px}
+    .scorefill{height:100%; width:0%}
+    .pill{
+      display:inline-flex; align-items:center; gap:6px;
+      font-size:12px; font-weight:700;
+      padding:6px 10px; border-radius:999px;
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.03);
+      color:var(--muted);
+      margin-top:8px;
+    }
+    details{
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:12px 14px;
+      background:rgba(0,0,0,.18);
+    }
+    details + details{margin-top:10px}
+    summary{cursor:pointer; font-weight:700}
+    .fineprint{font-size:12px; color:var(--muted)}
+    .hr{height:1px; background:var(--border); margin:14px 0}
+    .footer{margin-top:18px; color:var(--muted); font-size:12px}
+    .adsense{
+      border:1px dashed rgba(96,165,250,.45);
+      background:rgba(96,165,250,.07);
+      border-radius:14px;
+      padding:12px 14px;
+      color:var(--muted);
+      font-size:13px;
+      margin-top:12px;
+    }
+    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
+    nav{
+      display:flex; gap:12px; flex-wrap:wrap;
+      margin-top:6px;
+    }
+    nav a{
+      font-size:13px; color:var(--muted);
+      padding:6px 10px;
+      border:1px solid var(--border);
+      border-radius:999px;
+      background:rgba(255,255,255,.03);
+      text-decoration:none;
+    }
+    nav a:hover{color:var(--text)}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="badge">⚡ Weekly • Range-based • Save & compare</div>
+      <h1>Digital Exposure Calculator</h1>
+      <p class="sub">
+        Enter your <b>last 7 days</b> and get a shockingly clear estimate of your weekly exposure to <b>ads</b>, <b>tracking</b>,
+        and <b>attention tax</b>. Save a week and compare trends over time.
+      </p>
+
+      <nav aria-label="Site pages">
+        <a href="./about.html">About</a>
+        <a href="./privacy.html">Privacy Policy</a>
+        <a href="./contact.html">Contact</a>
+      </nav>
+    </header>
+
+    <div class="grid">
+      <section class="card" aria-label="Inputs">
+        <h2>Your last 7 days</h2>
+
+        <div class="row">
+          <div>
+            <label for="mode">Entry mode</label>
+            <select id="mode">
+              <option value="daily" selected>Daily average (last 7 days)</option>
+              <option value="weekly">Weekly total (last 7 days)</option>
+            </select>
+            <p class="note" style="margin:8px 0 0">
+              Choose <b>Daily</b> if you know your average hours/day. Choose <b>Weekly</b> if you tracked total hours in the last 7 days.
+            </p>
+          </div>
+          <div>
+            <label for="weeksProject">Weeks to project (optional)</label>
+            <input id="weeksProject" type="number" min="1" max="260" step="1" value="4" />
+            <p class="note" style="margin:8px 0 0">
+              “If you keep this pace…” estimate. Default: 4 weeks.
+            </p>
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:12px">
+          <div>
+            <label for="social">Social media (hours/day)</label>
+            <input id="social" type="number" min="0" max="84" step="0.1" value="1.5" />
+          </div>
+          <div>
+            <label for="video">YouTube / short-form (hours/day)</label>
+            <input id="video" type="number" min="0" max="84" step="0.1" value="1.0" />
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:12px">
+          <div>
+            <label for="browse">Browsing / news / general web (hours/day)</label>
+            <input id="browse" type="number" min="0" max="84" step="0.1" value="1.0" />
+          </div>
+          <div>
+            <label for="value">Value of your time ($/hour)</label>
+            <select id="value">
+              <option value="0">Don’t calculate</option>
+              <option value="15">$15/hr</option>
+              <option value="25" selected>$25/hr</option>
+              <option value="50">$50/hr</option>
+              <option value="custom">Custom…</option>
+            </select>
+            <div id="customWrap" style="display:none; margin-top:8px">
+              <label for="customValue">Custom $/hour</label>
+              <input id="customValue" type="number" min="0" max="1000" step="1" value="30" />
+            </div>
+          </div>
+        </div>
+
+        <div class="toggles">
+          <label class="toggle" title="Reduces ad estimates (assumes ~65% blocked).">
+            <input id="adblock" type="checkbox" />
+            I use an ad blocker
+          </label>
+        </div>
+
+        <div class="btns">
+          <button class="primary" id="calcBtn" type="button">Calculate</button>
+          <button class="ghost" id="saveBtn" type="button">Save this week</button>
+          <button class="ghost" id="resetBtn" type="button">Reset</button>
+          <button class="ghost" id="copyBtn" type="button">Copy summary</button>
+        </div>
+
+        <p class="note">
+          <b>Note:</b> This tool shows <b>ranges</b> based on public/industry averages. Actual exposure varies by platform, region,
+          subscriptions, and device settings.
+        </p>
+
+        <div class="adsense">
+          <b>AdSense placeholder:</b> once approved, paste your AdSense code where indicated in the HTML (see bottom).
+        </div>
+      </section>
+
+      <section class="card" aria-label="Results">
+        <h2>Your shock dashboard (weekly)</h2>
+
+        <div class="results" id="results"></div>
+
+        <div class="hr"></div>
+
+        <div id="trendBox" class="tile" style="display:none"></div>
+
+        <div class="hr"></div>
+
+        <div class="fineprint">
+          <b>How this is calculated:</b> ad/tracking estimates use conservative ranges per hour for each category
+          (social/video/browsing). We avoid fake precision by showing low–high bands.
+        </div>
+      </section>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <h2>FAQ (helps SEO + AdSense approval)</h2>
+
+      <details>
+        <summary>Is this exact?</summary>
+        <p class="fineprint">
+          No. It’s an <b>estimate</b>. Platforms vary widely, and your location, subscriptions, device settings, and browsing habits
+          can change ad density and tracking behavior. We show a <b>range</b> to reflect that uncertainty.
+        </p>
+      </details>
+
+      <details>
+        <summary>What counts as an “ad”?</summary>
+        <p class="fineprint">
+          We include display ads, in-feed sponsored posts, and promoted recommendations. We show ranges to avoid pretending every
+          platform is identical.
+        </p>
+      </details>
+
+      <details>
+        <summary>What are “tracking events”?</summary>
+        <p class="fineprint">
+          Tracking events include analytics calls, ad pixels, tag-manager events, and other third-party requests commonly triggered
+          when content loads.
+        </p>
+      </details>
+
+      <details>
+        <summary>Does this tool collect my data?</summary>
+        <p class="fineprint">
+          No. Your inputs are processed in your browser. If you click “Save this week,” your last saved results are stored locally
+          on your device using browser storage (localStorage).
+        </p>
+      </details>
+
+      <div class="hr"></div>
+
+      <p class="fineprint">
+        <b>Disclaimer:</b> This site provides informational estimates only and does not provide legal, financial, or medical advice.
+        Use results as awareness, not as measurement of any specific platform or company.
+      </p>
+    </div>
+
+    <div class="footer">
+      Tip: Save your week, then come back next week and compare. If you want more repeat visits later, we can add “Last 4 weeks” history (still local, still free).
+    </div>
+  </div>
+
+  <!-- =======================
+       AdSense insertion point
+       =======================
+       After approval, paste your AdSense script tag here (or in <head> per Google’s instructions).
+  -->
+
+  <script>
+    // -------- Helpers --------
+    const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
+    const round = (n) => Math.round(n);
+    const fmt = (n) => {
+      if (!isFinite(n)) return "—";
+      return Math.round(n).toLocaleString();
+    };
+    const fmtMoney = (n) => {
+      if (!isFinite(n)) return "—";
+      return n.toLocaleString(undefined, { style: "currency", currency: "USD", maximumFractionDigits: 0 });
+    };
+
+    function getValuePerHour() {
+      const sel = document.getElementById("value").value;
+      if (sel === "custom") return Number(document.getElementById("customValue").value || 0);
+      return Number(sel || 0);
+    }
+
+    function bucketThirdParties(hoursPerDay) {
+      if (hoursPerDay < 2) return { low: 50, high: 150 };
+      if (hoursPerDay <= 5) return { low: 150, high: 300 };
+      return { low: 300, high: 500 };
+    }
+
+    function severityPill(score) {
+      if (score >= 80) return { label: "High", hint: "High attention tax", tone: "danger" };
+      if (score >= 50) return { label: "Medium", hint: "Moderate attention tax", tone: "warn" };
+      return { label: "Low", hint: "Lower attention tax", tone: "ok" };
+    }
+
+    function pillHTML(p) {
+      let color = "rgba(156,163,175,.65)";
+      if (p.tone === "danger") color = "rgba(251,113,133,.75)";
+      if (p.tone === "warn") color = "rgba(251,191,36,.75)";
+      if (p.tone === "ok") color = "rgba(52,211,153,.75)";
+      return `<span class="pill" style="border-color:${color}; color:${color}">● ${p.label} — ${p.hint}</span>`;
+    }
+
+    function scoreFillStyle(score) {
+      const pct = clamp(score, 0, 100);
+      return `width:${pct}%; background: linear-gradient(90deg, rgba(96,165,250,.95), rgba(52,211,153,.95));`;
+    }
+
+    // -------- Save/compare (local-only) --------
+    const STORAGE_KEY = "dec_last_week_v1";
+
+    function loadLastWeek() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        return raw ? JSON.parse(raw) : null;
+      } catch {
+        return null;
+      }
+    }
+
+    function saveThisWeek() {
+      const s = window.__summary;
+      if (!s) return;
+
+      const payload = {
+        savedAt: new Date().toISOString(),
+        hoursWeek: s.hoursWeek,
+        hoursDay: s.hoursDay,
+        adsLow: s.adsLow,
+        adsHigh: s.adsHigh,
+        trackLow: s.trackLow,
+        trackHigh: s.trackHigh,
+        score: s.score
+      };
+
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+
+      const btn = document.getElementById("saveBtn");
+      const old = btn.textContent;
+      btn.textContent = "Saved!";
+      setTimeout(() => (btn.textContent = old), 1200);
+
+      renderTrendBox();
+    }
+
+    function diffLine(label, current, prior, suffix="") {
+      const delta = current - prior;
+      const sign = delta > 0 ? "+" : "";
+      return `${label}: ${fmt(prior)} → ${fmt(current)} (${sign}${fmt(delta)}${suffix})`;
+    }
+
+    function renderTrendBox() {
+      const last = loadLastWeek();
+      const cur = window.__summary;
+
+      const box = document.getElementById("trendBox");
+      if (!box || !cur || !last) {
+        if (box) box.style.display = "none";
+        return;
+      }
+
+      const curAdsMid = (cur.adsLow + cur.adsHigh) / 2;
+      const lastAdsMid = (last.adsLow + last.adsHigh) / 2;
+      const curTrackMid = (cur.trackLow + cur.trackHigh) / 2;
+      const lastTrackMid = (last.trackLow + last.trackHigh) / 2;
+
+      const savedDate = new Date(last.savedAt);
+      const savedText = isFinite(savedDate) ? savedDate.toLocaleString() : last.savedAt;
+
+      box.style.display = "block";
+      box.innerHTML = `
+        <p class="k">Last saved week</p>
+        <p class="v">Trend vs last time</p>
+        <p class="c">Saved: ${savedText}</p>
+        <div class="mono fineprint" style="margin-top:10px; white-space:pre-wrap; line-height:1.5">
+${diffLine("Time online (hrs/week)", cur.hoursWeek, last.hoursWeek)}
+${diffLine("Ads (midpoint/week)", curAdsMid, lastAdsMid)}
+${diffLine("Tracking (midpoint/week)", curTrackMid, lastTrackMid)}
+${diffLine("Attention Tax Score", cur.score, last.score, "/100")}
+        </div>
+      `;
+    }
+
+    // -------- Main calc (weekly-first) --------
+    function calculate() {
+      const mode = document.getElementById("mode").value;
+
+      const socialIn = Number(document.getElementById("social").value || 0);
+      const videoIn  = Number(document.getElementById("video").value || 0);
+      const browseIn = Number(document.getElementById("browse").value || 0);
+
+      const weeksProject = clamp(Number(document.getElementById("weeksProject").value || 4), 1, 260);
+      const adblock = document.getElementById("adblock").checked;
+
+      // Convert inputs to weekly + daily
+      let socialDay, videoDay, browseDay, hoursWeek, hoursDay;
+
+      if (mode === "daily") {
+        socialDay = Math.max(0, socialIn);
+        videoDay  = Math.max(0, videoIn);
+        browseDay = Math.max(0, browseIn);
+
+        hoursDay = socialDay + videoDay + browseDay;
+        hoursWeek = hoursDay * 7;
+      } else {
+        const socialWeek = Math.max(0, socialIn);
+        const videoWeek  = Math.max(0, videoIn);
+        const browseWeek = Math.max(0, browseIn);
+
+        hoursWeek = socialWeek + videoWeek + browseWeek;
+        hoursDay = hoursWeek / 7;
+
+        socialDay = socialWeek / 7;
+        videoDay  = videoWeek / 7;
+        browseDay = browseWeek / 7;
+      }
+
+      // Weekly time outputs
+      const daysWeek24 = hoursWeek / 24;
+      const wakingDaysWeek = hoursWeek / 16;
+
+      // Ads ranges (weekly totals)
+      let adsLow = (socialDay*20 + videoDay*10 + browseDay*5) * 7;
+      let adsHigh = (socialDay*60 + videoDay*40 + browseDay*20) * 7;
+      if (adblock) { adsLow *= 0.35; adsHigh *= 0.35; }
+
+      const adsPerDayLow = adsLow / 7;
+      const adsPerDayHigh = adsHigh / 7;
+
+      // Sponsored persuasion (weekly)
+      const itemsLow = (socialDay + videoDay) * 30 * 7;
+      const itemsHigh = (socialDay + videoDay) * 120 * 7;
+      const sponsoredLow = itemsLow * 0.05;
+      const sponsoredHigh = itemsHigh * 0.20;
+
+      // Tracking events (weekly)
+      const trackLow = (socialDay*100 + videoDay*80 + browseDay*50) * 7;
+      const trackHigh = (socialDay*600 + videoDay*500 + browseDay*300) * 7;
+
+      const trackMidPerDay = ((trackLow + trackHigh) / 2) / 7;
+      const adsMidPerDay = ((adsLow + adsHigh) / 2) / 7;
+
+      // Third parties bucket by daily usage
+      const tp = bucketThirdParties(hoursDay);
+
+      // Opportunity cost (weekly)
+      const vph = getValuePerHour();
+      const oppCostWeek = vph > 0 ? hoursWeek * vph : NaN;
+
+      // Projection: N weeks
+      const projHours = hoursWeek * weeksProject;
+      const projWakingDays = projHours / 16;
+
+      // Attention Tax Score (daily intensity)
+      const timeScore = clamp((hoursDay / 8) * 100, 0, 100);
+      const adIntensity = clamp((adsMidPerDay / 300) * 100, 0, 100);
+      const trackIntensity = clamp((trackMidPerDay / 3000) * 100, 0, 100);
+      const score = round(0.5 * timeScore + 0.3 * adIntensity + 0.2 * trackIntensity);
+      const sev = severityPill(score);
+
+      const tiles = [
+        { k: "Time online this week", v: `${fmt(hoursWeek)} hours`, c: `≈ ${fmt(daysWeek24)} full days/week` },
+        { k: "Waking time used this week", v: `${fmt(wakingDaysWeek)} waking days`, c: `Assumes ~16 waking hours/day` },
+        { k: "Ads seen this week (estimate)", v: `${fmt(adsLow)} – ${fmt(adsHigh)}`, c: `≈ ${fmt(adsPerDayLow)}–${fmt(adsPerDayHigh)} ads/day` },
+        { k: "Sponsored persuasion this week (estimate)", v: `${fmt(sponsoredLow)} – ${fmt(sponsoredHigh)}`, c: `Paid/boosted content mixed into feeds` },
+        { k: "Tracking events this week (estimate)", v: `${fmt(trackLow)} – ${fmt(trackHigh)}`, c: `≈ ${fmt(trackLow/7/60)}–${fmt(trackHigh/7/60)} per minute online` },
+        { k: "Third-party companies (estimate)", v: `${tp.low} – ${tp.high}`, c: `Ads, analytics, CDNs, embedded services` },
+        { k: "Opportunity cost (weekly)", v: vph > 0 ? fmtMoney(oppCostWeek) : "—", c: vph > 0 ? `At ${fmtMoney(vph)}/hour of time value` : `Set a $/hour to compute this` },
+        { k: "Attention Tax Score", v: `${score}/100`, c: `Based on daily intensity (time + ads + tracking)` },
+        { k: `If you repeat this for ${weeksProject} weeks…`, v: `${fmt(projHours)} hours`, c: `≈ ${fmt(projWakingDays)} waking days at this pace` }
+      ];
+
+      const results = document.getElementById("results");
+      results.innerHTML = tiles.map((t) => {
+        if (t.k === "Attention Tax Score") {
+          return `
+            <div class="tile">
+              <p class="k">${t.k}</p>
+              <p class="v">${t.v}</p>
+              <p class="c">${t.c}</p>
+              ${pillHTML(sev)}
+              <div class="scorebar" aria-label="Score bar">
+                <div class="scorefill" style="${scoreFillStyle(score)}"></div>
+              </div>
+            </div>
+          `;
+        }
+        return `
+          <div class="tile">
+            <p class="k">${t.k}</p>
+            <p class="v">${t.v}</p>
+            <p class="c">${t.c}</p>
+          </div>
+        `;
+      }).join("");
+
+      // Save summary for copy/save
+      window.__summary = {
+        mode, hoursWeek, hoursDay, weeksProject,
+        adsLow, adsHigh, trackLow, trackHigh, score
+      };
+
+      // Update labels to match mode
+      const dailyLabel = "hours/day";
+      const weeklyLabel = "total hours/week";
+      document.querySelector('label[for="social"]').textContent = `Social media (${mode === "daily" ? dailyLabel : weeklyLabel})`;
+      document.querySelector('label[for="video"]').textContent = `YouTube / short-form (${mode === "daily" ? dailyLabel : weeklyLabel})`;
+      document.querySelector('label[for="browse"]').textContent = `Browsing / news / general web (${mode === "daily" ? dailyLabel : weeklyLabel})`;
+
+      // Show trend box if last saved exists
+      renderTrendBox();
+    }
+
+    function resetForm() {
+      document.getElementById("mode").value = "daily";
+      document.getElementById("weeksProject").value = 4;
+      document.getElementById("social").value = 1.5;
+      document.getElementById("video").value = 1.0;
+      document.getElementById("browse").value = 1.0;
+      document.getElementById("adblock").checked = false;
+      document.getElementById("value").value = "25";
+      document.getElementById("customWrap").style.display = "none";
+      calculate();
+    }
+
+    function copySummary() {
+      const s = window.__summary;
+      if (!s) return;
+
+      const text =
+`Digital Exposure Calculator (last 7 days estimate)
+- Online: ${fmt(s.hoursWeek)} hours/week (~${(s.hoursDay).toFixed(1)} hrs/day)
+- Ads: ${fmt(s.adsLow)}–${fmt(s.adsHigh)} ads/week
+- Tracking: ${fmt(s.trackLow)}–${fmt(s.trackHigh)} events/week
+- Attention Tax Score: ${s.score}/100
+- If repeated for ${s.weeksProject} weeks: ${fmt(s.hoursWeek * s.weeksProject)} hours`;
+
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = document.getElementById("copyBtn");
+        const old = btn.textContent;
+        btn.textContent = "Copied!";
+        setTimeout(() => btn.textContent = old, 1200);
+      }).catch(() => {
+        alert("Couldn’t copy automatically. You can manually select and copy your results.");
+      });
+    }
+
+    // Events
+    document.getElementById("calcBtn").addEventListener("click", calculate);
+    document.getElementById("saveBtn").addEventListener("click", saveThisWeek);
+    document.getElementById("resetBtn").addEventListener("click", resetForm);
+    document.getElementById("copyBtn").addEventListener("click", copySummary);
+
+    document.getElementById("value").addEventListener("change", (e) => {
+      const show = e.target.value === "custom";
+      document.getElementById("customWrap").style.display = show ? "block" : "none";
+    });
+
+    // Auto-calc on load
+    calculate();
+  </script>
+</body>
+</html>
